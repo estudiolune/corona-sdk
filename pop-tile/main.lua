@@ -5,7 +5,7 @@
 -----------------------------------------------------------------------------------------
 
 -- set default background
-display.setDefault( "background", 231/255, 215/255, 163/255 )
+--display.setDefault( "background", 231/255, 215/255, 163/255 )
 
 -- constants
 local TILE_SIZE = 32
@@ -20,27 +20,29 @@ local COLORS = {
 }
 
 local tileArray = {}
-local board = display.newGroup()
+local grid = display.newGroup()
 
 -- returns a new tile
 local function newTile( px, py )
-    local randomTile = math.random( #COLORS )
     local tile = display.newRect( px, py, TILE_SIZE, TILE_SIZE )
-    tile.value = randomTile
-    tile:setFillColor( COLORS[randomTile].r, COLORS[randomTile].g, COLORS[randomTile].b )
+    tile.value = math.random( #COLORS )
+    tile.visited = false
+    local color = COLORS[tile.value]
+    tile:setFillColor( color.r, color.g, color.b )
     return tile
 end
 
 -- removes the neighbors of the same type - flood fill algorithm
-local function floodFill( row, col, value )
+local function floodFill( row, col, value, tiles )
     if row > 0 and row < MAX_ROWS+1 and col > 0 and col < MAX_COLS+1 then
-        if tileArray[row][col] ~= nil and tileArray[row][col].value == value then
-            tileArray[row][col]:removeSelf()
-            tileArray[row][col] = nil
-            floodFill( row+1, col, value )
-            floodFill( row-1, col, value )
-            floodFill( row, col+1, value )
-            floodFill( row, col-1, value )
+        local tile = tileArray[row][col]
+        if tile ~= nil and tile.value == value and not tile.visited then
+            tile.visited = true
+            tiles[#tiles+1] = { row=row, col=col }
+            floodFill( row + 1, col, value, tiles )
+            floodFill( row - 1, col, value, tiles )
+            floodFill( row, col + 1, value, tiles )
+            floodFill( row, col - 1, value, tiles )
         end
     end
 end
@@ -78,7 +80,7 @@ local function fallFromTop()
         local holes = holesBelow( 0, col )
         for row=1, holes do
             tileArray[row][col] = newTile( TILE_SIZE * col - TILE_HALF_SIZE, -( holes - row ) * TILE_SIZE - TILE_HALF_SIZE )
-            board:insert( tileArray[row][col] )
+            grid:insert( tileArray[row][col] )
             transition.to( tileArray[row][col], { time=500, y=TILE_SIZE * row - TILE_HALF_SIZE } )
         end
     end
@@ -89,9 +91,24 @@ local function touchHandler( event )
     if event.phase == "began" then
         local row = math.ceil( ( event.y-event.target.y ) / ( TILE_SIZE ) )
         local col = math.ceil( ( event.x-event.target.x ) / ( TILE_SIZE ) )
-        floodFill( row, col, tileArray[row][col].value )
-        fall()
-        fallFromTop()
+        
+        local tiles = {}
+        floodFill( row, col, tileArray[row][col].value, tiles )
+        
+        if #tiles > 2 then
+            for i=1, #tiles do
+                local row,col = tiles[i].row, tiles[i].col
+                tileArray[row][col]:removeSelf()
+                tileArray[row][col] = nil
+            end
+            fall()
+            fallFromTop()
+        else
+            for i=1, #tiles do
+                local row,col = tiles[i].row, tiles[i].col
+                tileArray[row][col].visited = false
+            end
+        end
     end
     return true
 end
@@ -102,11 +119,11 @@ for row=1, MAX_ROWS do
     for col=1, MAX_COLS do
         local tile = newTile( TILE_SIZE * col - TILE_HALF_SIZE, TILE_SIZE * row - TILE_HALF_SIZE )
         tileArray[row][col] = tile
-        board:insert( tile )
+        grid:insert( tile )
     end
 end
 
--- add events and position the board
-board.x = display.contentCenterX - board.width * 0.5
-board.y = display.contentCenterY - board.height * 0.5
-board:addEventListener( "touch", touchHandler )
+-- add events and position the grid
+grid.x = display.contentCenterX - grid.width * 0.5
+grid.y = display.contentCenterY - grid.height * 0.5
+grid:addEventListener( "touch", touchHandler )

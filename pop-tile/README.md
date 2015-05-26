@@ -11,7 +11,3 @@ Download or clone the project and run in Corona Simulator.
 ## Credits
 
 TODO: Write credits
-
-## License
-
-TODO: Write license
