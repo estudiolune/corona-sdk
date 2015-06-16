@@ -1,13 +1,9 @@
-# Pop Tile
+# BR3ak+
 
-Pop Tile sample game written using CoronaSDK.
+[BR3AK+](https://play.google.com/store/apps/details?id=com.lunestudios.br3akplus) sample game written using CoronaSDK.
 
-*Read this in other languages: [English](README.md), [Portuguese](README.pt.md)*
+*See more in: (http://labs.lunestudios.com/corona-sdk-tutorial-br3ak)*
 
 ## Usage
 
 Download or clone the project and run in Corona Simulator.
-
-## Credits
-
-TODO: Write credits
