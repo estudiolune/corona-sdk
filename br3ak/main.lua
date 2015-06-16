@@ -4,14 +4,11 @@
 --
 -----------------------------------------------------------------------------------------
 
--- set default background
---display.setDefault( "background", 231/255, 215/255, 163/255 )
-
 -- constants
-local TILE_SIZE = 32
+local TILE_SIZE = 30
 local TILE_HALF_SIZE = TILE_SIZE * 0.5
-local MAX_ROWS = 12
-local MAX_COLS = 10
+local N_ROWS = 10
+local N_COLS = 10
 local COLORS = {
     { r=0/255,      g=160/255,  b=176/255 },
     { r=237/255,    g=201/255,  b=81/255 },
@@ -19,7 +16,7 @@ local COLORS = {
     { r=205/255,    g=51/255,   b=63/255 }
 }
 
-local tileArray = {}
+local tileMatrix = {}
 local grid = display.newGroup()
 
 -- returns a new tile
@@ -34,8 +31,8 @@ end
 
 -- removes the neighbors of the same type - flood fill algorithm
 local function floodFill( row, col, value, tiles )
-    if row > 0 and row < MAX_ROWS+1 and col > 0 and col < MAX_COLS+1 then
-        local tile = tileArray[row][col]
+    if row > 0 and row < N_ROWS+1 and col > 0 and col < N_COLS+1 then
+        local tile = tileMatrix[row][col]
         if tile ~= nil and tile.value == value and not tile.visited then
             tile.visited = true
             tiles[#tiles+1] = { row=row, col=col }
@@ -50,8 +47,8 @@ end
 -- returns how may holes have under such tile
 local function holesBelow( row, col )
     local holes = 0
-    for row=row+1, MAX_ROWS do
-        if tileArray[row][col] == nil then
+    for row=row+1, N_ROWS do
+        if tileMatrix[row][col] == nil then
             holes = holes + 1
         end
     end
@@ -60,14 +57,14 @@ end
 
 -- make remaining tiles fall down once you removed tiles
 local function fall()
-    for row=MAX_ROWS, 1, -1 do
-        for col=MAX_COLS, 1, -1 do
-            if tileArray[row][col] ~= nil then
+    for row=N_ROWS, 1, -1 do
+        for col=N_COLS, 1, -1 do
+            if tileMatrix[row][col] ~= nil then
                 local holes = holesBelow( row, col )
                 if holes > 0 then
-                    transition.to( tileArray[row][col], { time=500, y=( row + holes ) * TILE_SIZE - TILE_HALF_SIZE } )
-                    tileArray[row+holes][col] = tileArray[row][col]
-                    tileArray[row][col] = nil
+                    transition.to( tileMatrix[row][col], { time=500, y=( row + holes ) * TILE_SIZE - TILE_HALF_SIZE } )
+                    tileMatrix[row+holes][col] = tileMatrix[row][col]
+                    tileMatrix[row][col] = nil
                 end
             end
         end
@@ -76,12 +73,12 @@ end
 
 -- add new tiles falling from the top
 local function fallFromTop()
-    for col=1, MAX_COLS do
+    for col=1, N_COLS do
         local holes = holesBelow( 0, col )
         for row=1, holes do
-            tileArray[row][col] = newTile( TILE_SIZE * col - TILE_HALF_SIZE, -( holes - row ) * TILE_SIZE - TILE_HALF_SIZE )
-            grid:insert( tileArray[row][col] )
-            transition.to( tileArray[row][col], { time=500, y=TILE_SIZE * row - TILE_HALF_SIZE } )
+            tileMatrix[row][col] = newTile( TILE_SIZE * col - TILE_HALF_SIZE, -( holes - row ) * TILE_SIZE - TILE_HALF_SIZE )
+            grid:insert( tileMatrix[row][col] )
+            transition.to( tileMatrix[row][col], { time=500, y=TILE_SIZE * row - TILE_HALF_SIZE } )
         end
     end
 end
@@ -93,20 +90,20 @@ local function touchHandler( event )
         local col = math.ceil( ( event.x-event.target.x ) / ( TILE_SIZE ) )
         
         local tiles = {}
-        floodFill( row, col, tileArray[row][col].value, tiles )
+        floodFill( row, col, tileMatrix[row][col].value, tiles )
         
         if #tiles > 2 then
             for i=1, #tiles do
                 local row,col = tiles[i].row, tiles[i].col
-                tileArray[row][col]:removeSelf()
-                tileArray[row][col] = nil
+                tileMatrix[row][col]:removeSelf()
+                tileMatrix[row][col] = nil
             end
             fall()
             fallFromTop()
         else
             for i=1, #tiles do
                 local row,col = tiles[i].row, tiles[i].col
-                tileArray[row][col].visited = false
+                tileMatrix[row][col].visited = false
             end
         end
     end
@@ -114,11 +111,11 @@ local function touchHandler( event )
 end
 
 -- create grid with tiles
-for row=1, MAX_ROWS do
-    tileArray[row] = {}
-    for col=1, MAX_COLS do
+for row=1, N_ROWS do
+    tileMatrix[row] = {}
+    for col=1, N_COLS do
         local tile = newTile( TILE_SIZE * col - TILE_HALF_SIZE, TILE_SIZE * row - TILE_HALF_SIZE )
-        tileArray[row][col] = tile
+        tileMatrix[row][col] = tile
         grid:insert( tile )
     end
 end
