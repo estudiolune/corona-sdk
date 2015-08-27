@@ -2,7 +2,7 @@
 
 Isometric Tile-Based sample game written using CoronaSDK.
 
-*See more in http://labs.lunestudios.com/isometric-tile-based
+*See more in http://labs.lunestudios.com/corona-sdk-tutorial-isometric-tile-based*
 
 ## Usage
 
